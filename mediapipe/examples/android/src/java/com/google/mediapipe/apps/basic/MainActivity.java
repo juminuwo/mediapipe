@@ -26,6 +26,15 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.ar.core.Config;
+import com.google.ar.core.Frame;
+import com.google.ar.core.Session;
+import com.google.ar.core.exceptions.UnavailableApkTooOldException;
+import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
+import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
+import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
+import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import com.google.mediapipe.components.CameraHelper;
 import com.google.mediapipe.components.CameraXPreviewHelper;
 import com.google.mediapipe.components.ExternalTextureConverter;
@@ -33,6 +42,7 @@ import com.google.mediapipe.components.FrameProcessor;
 import com.google.mediapipe.components.PermissionHelper;
 import com.google.mediapipe.framework.AndroidAssetUtil;
 import com.google.mediapipe.glutil.EglManager;
+import com.google.ar.core.ArCoreApk;
 
 /** Main activity of MediaPipe basic app. */
 public class MainActivity extends AppCompatActivity {
@@ -77,10 +87,16 @@ public class MainActivity extends AppCompatActivity {
   // ApplicationInfo for retrieving metadata defined in the manifest.
   private ApplicationInfo applicationInfo;
 
+  // For AR-core.
+  boolean installRequested;
+  private Session session;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(getContentViewLayoutResId());
+
+    installRequested = false;
 
     try {
       applicationInfo =
@@ -125,6 +141,60 @@ public class MainActivity extends AppCompatActivity {
     converter.setFlipY(
         applicationInfo.metaData.getBoolean("flipFramesVertically", FLIP_FRAMES_VERTICALLY));
     converter.setConsumer(processor);
+
+    if (session == null) {
+      Exception exception = null;
+      String message = null;
+      try {
+        switch (ArCoreApk.getInstance().requestInstall(this, !installRequested)) {
+          case INSTALL_REQUESTED:
+            installRequested = true;
+            return;
+          case INSTALLED:
+            break;
+        }
+
+        // ARCore requires camera permissions to operate. If we did not yet obtain runtime
+        // permission on Android M and above, now is a good time to ask the user for it.
+        PermissionHelper.checkAndRequestCameraPermissions(this);
+
+        // Create the session.
+        session = new Session(/* context= */ this);
+      } catch (UnavailableArcoreNotInstalledException
+              | UnavailableUserDeclinedInstallationException e) {
+        message = "Please install ARCore";
+        exception = e;
+      } catch (UnavailableApkTooOldException e) {
+        message = "Please update ARCore";
+        exception = e;
+      } catch (UnavailableSdkTooOldException e) {
+        message = "Please update this app";
+        exception = e;
+      } catch (UnavailableDeviceNotCompatibleException e) {
+        message = "This device does not support AR";
+        exception = e;
+      } catch (Exception e) {
+        message = "Failed to create AR session";
+        exception = e;
+      }
+
+      if (message != null) {
+        Log.e("ARCORE ERROR", "Exception creating session", exception);
+        return;
+      }
+
+    }
+
+    // Note that order matters - see the note in onPause(), the reverse applies here.
+    /**
+    try {
+     configureSession();
+     session.resume();
+     } catch (CameraNotAvailableException e) {
+     session = null;
+     return;
+     }
+    */
     if (PermissionHelper.cameraPermissionsGranted(this)) {
       startCamera();
     }
@@ -214,5 +284,16 @@ public class MainActivity extends AppCompatActivity {
                 processor.getVideoSurfaceOutput().setSurface(null);
               }
             });
+  }
+
+  /** Configures the session with feature settings. */
+  private void configureSession() {
+    Config config = session.getConfig();
+    if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+      config.setDepthMode(Config.DepthMode.AUTOMATIC);
+    } else {
+      config.setDepthMode(Config.DepthMode.DISABLED);
+    }
+    session.configure(config);
   }
 }

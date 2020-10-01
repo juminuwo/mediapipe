@@ -16,7 +16,7 @@ load("//mediapipe/framework/port:build_config.bzl", "mediapipe_cc_proto_library"
 
 licenses(["notice"])
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//visibility:private"])
 
 proto_library(
     name = "object_proto",

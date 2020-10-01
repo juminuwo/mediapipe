@@ -174,15 +174,15 @@ TEST(ContentZoomingCalculatorTest, PanConfig) {
       ContentZoomingCalculatorOptions::ext);
   options->mutable_kinematic_options_pan()->set_min_motion_to_reframe(0.0);
   options->mutable_kinematic_options_pan()->set_update_rate_seconds(2);
-  options->mutable_kinematic_options_tilt()->set_min_motion_to_reframe(50.0);
-  options->mutable_kinematic_options_zoom()->set_min_motion_to_reframe(50.0);
+  options->mutable_kinematic_options_tilt()->set_min_motion_to_reframe(5.0);
+  options->mutable_kinematic_options_zoom()->set_min_motion_to_reframe(5.0);
   auto runner = ::absl::make_unique<CalculatorRunner>(config);
   AddDetection(cv::Rect_<float>(.4, .5, .1, .1), 0, runner.get());
   AddDetection(cv::Rect_<float>(.45, .55, .15, .15), 1000000, runner.get());
   MP_ASSERT_OK(runner->Run());
   CheckCropRect(450, 550, 111, 111, 0,
                 runner->Outputs().Tag("CROP_RECT").packets);
-  CheckCropRect(483, 550, 111, 111, 1,
+  CheckCropRect(488, 550, 111, 111, 1,
                 runner->Outputs().Tag("CROP_RECT").packets);
 }
 
@@ -190,17 +190,17 @@ TEST(ContentZoomingCalculatorTest, TiltConfig) {
   auto config = ParseTextProtoOrDie<CalculatorGraphConfig::Node>(kConfigD);
   auto* options = config.mutable_options()->MutableExtension(
       ContentZoomingCalculatorOptions::ext);
-  options->mutable_kinematic_options_pan()->set_min_motion_to_reframe(50.0);
+  options->mutable_kinematic_options_pan()->set_min_motion_to_reframe(5.0);
   options->mutable_kinematic_options_tilt()->set_min_motion_to_reframe(0.0);
   options->mutable_kinematic_options_tilt()->set_update_rate_seconds(2);
-  options->mutable_kinematic_options_zoom()->set_min_motion_to_reframe(50.0);
+  options->mutable_kinematic_options_zoom()->set_min_motion_to_reframe(5.0);
   auto runner = ::absl::make_unique<CalculatorRunner>(config);
   AddDetection(cv::Rect_<float>(.4, .5, .1, .1), 0, runner.get());
   AddDetection(cv::Rect_<float>(.45, .55, .15, .15), 1000000, runner.get());
   MP_ASSERT_OK(runner->Run());
   CheckCropRect(450, 550, 111, 111, 0,
                 runner->Outputs().Tag("CROP_RECT").packets);
-  CheckCropRect(450, 583, 111, 111, 1,
+  CheckCropRect(450, 588, 111, 111, 1,
                 runner->Outputs().Tag("CROP_RECT").packets);
 }
 
@@ -208,8 +208,8 @@ TEST(ContentZoomingCalculatorTest, ZoomConfig) {
   auto config = ParseTextProtoOrDie<CalculatorGraphConfig::Node>(kConfigD);
   auto* options = config.mutable_options()->MutableExtension(
       ContentZoomingCalculatorOptions::ext);
-  options->mutable_kinematic_options_pan()->set_min_motion_to_reframe(50.0);
-  options->mutable_kinematic_options_tilt()->set_min_motion_to_reframe(50.0);
+  options->mutable_kinematic_options_pan()->set_min_motion_to_reframe(5.0);
+  options->mutable_kinematic_options_tilt()->set_min_motion_to_reframe(5.0);
   options->mutable_kinematic_options_zoom()->set_min_motion_to_reframe(0.0);
   options->mutable_kinematic_options_zoom()->set_update_rate_seconds(2);
   auto runner = ::absl::make_unique<CalculatorRunner>(config);
@@ -415,25 +415,6 @@ TEST(ContentZoomingCalculatorTest, ShiftOutsideBounds) {
   AddDetection(cv::Rect_<float>(.9, 0, .1, .1), 0, runner.get());
   MP_ASSERT_OK(runner->Run());
   CheckCropRect(944, 56, 111, 111, 0,
-                runner->Outputs().Tag("CROP_RECT").packets);
-}
-
-TEST(ContentZoomingCalculatorTest, EmptySize) {
-  auto config = ParseTextProtoOrDie<CalculatorGraphConfig::Node>(kConfigD);
-  auto runner = ::absl::make_unique<CalculatorRunner>(config);
-  MP_ASSERT_OK(runner->Run());
-  ASSERT_EQ(runner->Outputs().Tag("CROP_RECT").packets.size(), 0);
-}
-
-TEST(ContentZoomingCalculatorTest, EmptyDetections) {
-  auto config = ParseTextProtoOrDie<CalculatorGraphConfig::Node>(kConfigD);
-  auto runner = ::absl::make_unique<CalculatorRunner>(config);
-  auto input_size = ::absl::make_unique<std::pair<int, int>>(1000, 1000);
-  runner->MutableInputs()
-      ->Tag("VIDEO_SIZE")
-      .packets.push_back(Adopt(input_size.release()).At(Timestamp(0)));
-  MP_ASSERT_OK(runner->Run());
-  CheckCropRect(0, 0, 1000, 1000, 0,
                 runner->Outputs().Tag("CROP_RECT").packets);
 }
 

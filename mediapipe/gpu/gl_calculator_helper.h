@@ -15,6 +15,8 @@
 #ifndef MEDIAPIPE_GPU_GL_CALCULATOR_HELPER_H_
 #define MEDIAPIPE_GPU_GL_CALCULATOR_HELPER_H_
 
+#include <memory>
+
 #include "absl/memory/memory.h"
 #include "mediapipe/framework/calculator_context.h"
 #include "mediapipe/framework/calculator_contract.h"
@@ -27,7 +29,6 @@
 #include "mediapipe/gpu/gl_context.h"
 #include "mediapipe/gpu/gpu_buffer.h"
 #include "mediapipe/gpu/graph_support.h"
-
 #ifdef __APPLE__
 #include <CoreVideo/CoreVideo.h>
 
@@ -48,8 +49,6 @@ typedef CVOpenGLTextureRef CVTextureType;
 typedef CVOpenGLESTextureRef CVTextureType;
 #endif  // TARGET_OS_OSX
 #endif  // __APPLE__
-
-using ImageFrameSharedPtr = std::shared_ptr<ImageFrame>;
 
 // TODO: remove this and Process below, or make Process available
 // on Android.
@@ -122,7 +121,7 @@ class GlCalculatorHelper {
   // where it is supported (iOS, for now) they take advantage of memory sharing
   // between the CPU and GPU, avoiding memory copies.
 
-  // Creates a texture representing an input frame, and manages sync token.
+  // Creates a texture representing an input frame.
   GlTexture CreateSourceTexture(const GpuBuffer& pixel_buffer);
   GlTexture CreateSourceTexture(const ImageFrame& image_frame);
 
@@ -138,7 +137,7 @@ class GlCalculatorHelper {
   void GetGpuBufferDimensions(const GpuBuffer& pixel_buffer, int* width,
                               int* height);
 
-  // Creates a texture representing an output frame, and manages sync token.
+  // Creates a texture representing an output frame.
   // TODO: This should either return errors or a status.
   GlTexture CreateDestinationTexture(
       int output_width, int output_height,
@@ -153,22 +152,11 @@ class GlCalculatorHelper {
 
   GlContext& GetGlContext() const;
 
-  // Check if the calculator helper has been previously initialized.
-  bool Initialized() { return impl_ != nullptr; }
-
  private:
   std::unique_ptr<GlCalculatorHelperImpl> impl_;
 };
 
-// Represents an OpenGL texture, and is a 'view' into the memory pool.
-// It's more like a GlTextureLock, because it's main purpose (in conjunction
-// with the helper): to manage GL sync points in the gl command queue.
-//
-// This class should be the main way to interface with GL memory within a single
-// calculator. This is the preferred way to utilize the memory pool inside of
-// the helper, because GlTexture manages efficiently releasing memory back into
-// the pool. A GPU backed Image can be extracted from the unerlying
-// memory.
+// Represents an OpenGL texture.
 class GlTexture {
  public:
   GlTexture() {}
@@ -182,12 +170,11 @@ class GlTexture {
   GLuint name() const { return name_; }
 
   // Returns a buffer that can be sent to another calculator.
-  // & manages sync token
-  // Can be used with GpuBuffer or ImageFrame or Image
+  // Can be used with GpuBuffer or ImageFrame.
   template <typename T>
   std::unique_ptr<T> GetFrame() const;
 
-  // Releases texture memory & manages sync token
+  // Releases texture memory
   void Release();
 
  private:

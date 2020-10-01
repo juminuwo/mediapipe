@@ -233,20 +233,19 @@ public class FrameProcessor implements TextureFrameProcessor, AudioDataProcessor
    *
    * @param inputStream the graph input stream that will receive input audio samples.
    * @param outputStream the output stream from which output audio samples will be produced.
-   * @param numInputChannels the number of audio channels in the input audio stream.
-   * @param numOutputChannels the number of audio channels in the output audio stream. If there is
-   *                          no output stream, set this to zero.
+   * @param numChannels the number of audio channels in the input audio stream.
    * @param audioSampleRateInHz the sample rate for audio samples in hertz (Hz).
    */
   public void addAudioStreams(
       @Nullable String inputStream,
       @Nullable String outputStream,
-      int numInputChannels,
-      int numOutputChannels,
+      int numChannels,
       double audioSampleRateInHz) {
     audioInputStream = inputStream;
     audioOutputStream = outputStream;
-    numAudioChannels = numInputChannels;
+    numAudioChannels = numChannels;
+    int audioChannelMask =
+        numAudioChannels == 2 ? AudioFormat.CHANNEL_IN_STEREO : AudioFormat.CHANNEL_IN_MONO;
     audioSampleRate = audioSampleRateInHz;
 
     if (audioInputStream != null) {
@@ -255,13 +254,11 @@ public class FrameProcessor implements TextureFrameProcessor, AudioDataProcessor
     }
 
     if (audioOutputStream != null) {
-      int outputAudioChannelMask =
-          numOutputChannels == 2 ? AudioFormat.CHANNEL_IN_STEREO : AudioFormat.CHANNEL_IN_MONO;
       AudioFormat audioFormat =
           new AudioFormat.Builder()
               .setEncoding(AUDIO_ENCODING)
               .setSampleRate((int) audioSampleRate)
-              .setChannelMask(outputAudioChannelMask)
+              .setChannelMask(audioChannelMask)
               .build();
       mediapipeGraph.addPacketCallback(
           audioOutputStream,

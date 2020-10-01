@@ -20,7 +20,6 @@
 #include "mediapipe/python/pybind/packet_getter.h"
 #include "mediapipe/python/pybind/resource_util.h"
 #include "mediapipe/python/pybind/timestamp.h"
-#include "mediapipe/python/pybind/validated_graph_config.h"
 
 namespace mediapipe {
 namespace python {
@@ -34,7 +33,6 @@ PYBIND11_MODULE(_framework_bindings, m) {
   PacketCreatorSubmodule(&m);
   PacketGetterSubmodule(&m);
   CalculatorGraphSubmodule(&m);
-  ValidatedGraphConfigSubmodule(&m);
 }
 
 }  // namespace python

@@ -947,7 +947,6 @@ cc_library(
         ],
     }),
     visibility = [
-        "//mediapipe/calculators:__subpackages__",
         "//mediapipe/framework:__subpackages__",
         "//mediapipe/framework/port:__pkg__",
         "//mediapipe/util:__subpackages__",

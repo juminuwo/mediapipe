@@ -50,9 +50,6 @@ REGISTER_CALCULATOR(ConcatenateInt32VectorCalculator);
 typedef ConcatenateVectorCalculator<uint64> ConcatenateUInt64VectorCalculator;
 REGISTER_CALCULATOR(ConcatenateUInt64VectorCalculator);
 
-typedef ConcatenateVectorCalculator<bool> ConcatenateBoolVectorCalculator;
-REGISTER_CALCULATOR(ConcatenateBoolVectorCalculator);
-
 // Example config:
 // node {
 //   calculator: "ConcatenateTfLiteTensorVectorCalculator"

@@ -14,7 +14,6 @@
 #
 
 load("//mediapipe/framework/port:build_config.bzl", "mediapipe_proto_library")
-load("//mediapipe/framework:mediapipe_register_type.bzl", "mediapipe_register_type")
 
 package(
     default_visibility = ["//visibility:private"],
@@ -222,47 +221,9 @@ mediapipe_proto_library(
     ],
 )
 
-mediapipe_register_type(
-    base_name = "landmark",
-    include_headers = ["mediapipe/framework/formats/landmark.pb.h"],
-    types = [
-        "::mediapipe::Landmark",
-        "::mediapipe::NormalizedLandmark",
-        "::mediapipe::NormalizedLandmarkList",
-        "::std::vector<::mediapipe::Landmark>",
-        "::std::vector<::mediapipe::NormalizedLandmark>",
-    ],
-    deps = [":landmark_cc_proto"],
-)
-
 # Expose the proto source files for building mediapipe AAR.
 filegroup(
     name = "protos_src",
     srcs = glob(["*.proto"]),
     visibility = ["//mediapipe:__subpackages__"],
-)
-
-cc_library(
-    name = "image_frame_pool",
-    srcs = ["image_frame_pool.cc"],
-    hdrs = ["image_frame_pool.h"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":image_frame",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/synchronization",
-    ],
-)
-
-cc_test(
-    name = "image_frame_pool_test",
-    size = "small",
-    srcs = ["image_frame_pool_test.cc"],
-    tags = ["linux"],
-    deps = [
-        ":image_frame_pool",
-        "//mediapipe/framework/port:gtest_main",
-        "//mediapipe/framework/port:status",
-        "@com_google_absl//absl/memory",
-    ],
 )

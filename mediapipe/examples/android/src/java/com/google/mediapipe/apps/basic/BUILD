@@ -29,6 +29,7 @@ android_library(
         "//third_party:androidx_appcompat",
         "//third_party:androidx_constraint_layout",
         "//third_party:opencv",
+        "//third_party:arcore",
         "@maven//:androidx_concurrent_concurrent_futures",
         "@maven//:com_google_guava_guava",
     ],
